@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item
+    android:id="@+id/home"
+    android:title="Home"
+    android:icon="@drawable/ic_home"
+    />
+    <item
+        android:id="@+id/check_clothing"
+        android:title="Check Clothing"
+        android:icon="@drawable/baseline_document_scanner_24"
+        />
+    <item
+        android:id="@+id/your_clothes"
+        android:title="Clothes"
+        android:icon="@drawable/ic_user"
+        />
+</menu>
