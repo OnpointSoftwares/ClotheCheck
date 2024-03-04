@@ -1,0 +1,9 @@
+<!-- Customize this layout based on your data model -->
+<!-- Example: This layout assumes a TextView for displaying the name of the cloth -->
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/textViewClothName"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textSize="18sp"
+    android:padding="16dp"/>
