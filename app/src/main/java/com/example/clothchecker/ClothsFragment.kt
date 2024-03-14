@@ -17,8 +17,11 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
@@ -28,7 +31,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clothchecker.ClothsViewModel
 import com.example.clothchecker.R
-import com.example.clothchecker.adapters.ClothAdapter
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -60,15 +62,17 @@ class ClothsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_cloths, container, false)
-
         // Initialize ViewModel
         viewModel = ViewModelProvider(this).get(ClothsViewModel::class.java)
         fab = view.findViewById(R.id.fab)
-        val type = view.findViewById<TextInputEditText>(R.id.typeEdt)
+        val type = view.findViewById<Spinner>(R.id.typeEdt)
         val upload: Button = view.findViewById(R.id.upload)
+        val listTypes = arrayOf("Shirts", "Trousers", "Cape")
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, listTypes)
+        type.adapter = adapter
         upload.setOnClickListener {
-            if(imageUrl.toString()!=""&&type.text.toString()!="") {
-                saveClothes(imageUrl, type.text.toString(), view)
+            if(imageUrl.toString()!=""&&type.selectedItem.toString()!="") {
+                saveClothes(imageUrl, type.selectedItem.toString(), view)
             }
             else{
                 Toast.makeText(view.context,"Null data",Toast.LENGTH_LONG).show()
@@ -76,6 +80,17 @@ class ClothsFragment : Fragment() {
         }
         fab.setOnClickListener {
             selectImage(view)
+        }
+        type.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                // Handle selection here
+                val selectedItem = listTypes[position]
+                Toast.makeText(requireContext(), "Selected: $selectedItem", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Handle case where nothing is selected
+            }
         }
         return view
     }

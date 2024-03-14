@@ -5,9 +5,18 @@
     android:layout_height="match_parent"
     tools:context=".ClothCheckFragment">
 
-    <TextView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Hello" />
-
+        android:padding="16dp"
+        android:clipToPadding="false" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/next"
+        android:src="@drawable/baseline_zoom_in_24"
+        android:layout_marginStart="150dp"
+        android:layout_gravity="bottom"
+        />
 </FrameLayout>

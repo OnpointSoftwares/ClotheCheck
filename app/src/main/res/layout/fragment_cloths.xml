@@ -13,12 +13,12 @@
       app:layout_constraintTop_toTopOf="parent"
     android:hint="Cloth Type"
     >
-    <com.google.android.material.textfield.TextInputEditText
-        android:layout_width="match_parent"
+    <Spinner
         android:id="@+id/typeEdt"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-      android:inputType="text"
-      />
+        android:padding="10dp"
+        />
   </com.google.android.material.textfield.TextInputLayout>
 <ImageView
     app:layout_constraintStart_toStartOf="parent"
