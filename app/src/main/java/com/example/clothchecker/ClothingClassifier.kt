@@ -1,5 +1,5 @@
 package com.example.clothchecker
-
+/*
 import org.tensorflow.lite.Interpreter
 import android.content.res.AssetManager
 import android.graphics.Bitmap
@@ -69,3 +69,4 @@ class ClothingClassifier(private val assetManager: AssetManager) {
         return byteBuffer
     }
 }
+*/
