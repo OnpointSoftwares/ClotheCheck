@@ -1,6 +1,7 @@
 package com.example.clothchecker
 
 import ClothingItem
+import android.app.Activity.RESULT_OK
 import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
@@ -27,29 +28,23 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.clothchecker.ClothsViewModel
-import com.example.clothchecker.R
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
-import java.util.UUID
+import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.segmentation.Segmentation
 import com.google.mlkit.vision.segmentation.SegmentationMask
-import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.segmentation.Segmenter
 import com.google.mlkit.vision.segmentation.selfie.SelfieSegmenterOptions
 import com.google.mlkit.vision.segmentation.selfie.SelfieSegmenterOptions.SINGLE_IMAGE_MODE
-import java.lang.Double
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.util.UUID
 
 class ClothsFragment : Fragment() {
 
@@ -57,6 +52,7 @@ class ClothsFragment : Fragment() {
     private lateinit var fab: FloatingActionButton
     private lateinit var imageUrl: Uri
     private lateinit var newImage: Bitmap
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -65,68 +61,82 @@ class ClothsFragment : Fragment() {
         // Initialize ViewModel
         viewModel = ViewModelProvider(this).get(ClothsViewModel::class.java)
         fab = view.findViewById(R.id.fab)
-        val type = view.findViewById<Spinner>(R.id.typeEdt)
+        val descriptionSpinner = view.findViewById<Spinner>(R.id.descriptionSpinner)
+        val nameSpinner = view.findViewById<Spinner>(R.id.nameSpinner)
+
+        val listDescriptions = arrayOf(
+            "Rugged",
+            "Crop top",
+            "Slippers",
+            "Above knees skirt",
+            "Below knees skirt",
+            "slippers"
+        )
+        val descriptionAdapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, listDescriptions)
+        descriptionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        descriptionSpinner.adapter = descriptionAdapter
+
+        val listNames = arrayOf("Trousers", "Skirts", "Shirts", "Caps", "Slippers", "Shoes")
+        val nameAdapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, listNames)
+        nameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        nameSpinner.adapter = nameAdapter
+
         val upload: Button = view.findViewById(R.id.upload)
-        val listTypes = arrayOf("Shirts", "Trousers", "Cape")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, listTypes)
-        type.adapter = adapter
         upload.setOnClickListener {
-            if(imageUrl.toString()!=""&&type.selectedItem.toString()!="") {
-                saveClothes(imageUrl, type.selectedItem.toString(), view)
-            }
-            else{
-                Toast.makeText(view.context,"Null data",Toast.LENGTH_LONG).show()
+            if (::imageUrl.isInitialized && descriptionSpinner.selectedItemPosition != AdapterView.INVALID_POSITION) {
+                val type = listDescriptions[descriptionSpinner.selectedItemPosition]
+                val name = listNames[nameSpinner.selectedItemPosition]
+                saveClothes(imageUrl, type, name, view)
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Please select an image and description",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
         fab.setOnClickListener {
-            selectImage(view)
-        }
-        type.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                // Handle selection here
-                val selectedItem = listTypes[position]
-                Toast.makeText(requireContext(), "Selected: $selectedItem", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // Handle case where nothing is selected
-            }
+            selectImage()
         }
         return view
     }
 
-    private fun saveClothes(selectedImage: Uri, type: String, view: View) {
+    private fun saveClothes(selectedImage: Uri, type: String, name: String, view: View) {
         val auth = FirebaseAuth.getInstance().currentUser!!.uid
         val ref = FirebaseDatabase.getInstance().reference
         val keyId = ref.push().key.toString()
 
         // Assuming you want to store the image URL, convert the Uri to a string
         val imageUrl = selectedImage.toString()
-        val clothingItem=ClothingItem(type,imageUrl)
+        val clothingItem = ClothingItem(type, imageUrl, name)
         ref.child("Clothes").child(auth).child(keyId).setValue(clothingItem)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Toast.makeText(view.context, "Saved successfully", Toast.LENGTH_LONG).show()
-                    startActivity(Intent(view.context,editPhoto::class.java))
+                    startActivity(Intent(view.context, editPhoto::class.java))
                 } else {
                     Toast.makeText(view.context, "Failed to save data", Toast.LENGTH_LONG).show()
                 }
             }
             .addOnFailureListener { exception ->
                 // Handle the failure here, e.g., log the exception or show an error message
-                Toast.makeText(view.context, "Failed: ${exception.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(view.context, "Failed: ${exception.message}", Toast.LENGTH_LONG)
+                    .show()
             }
     }
 
-    private fun selectImage(view:View) {
+    private fun selectImage() {
         val choice = arrayOf<CharSequence>("Take Photo", "Choose from Gallery", "Cancel")
-        val myAlertDialog: AlertDialog.Builder = AlertDialog.Builder(view.context)
+        val myAlertDialog: AlertDialog.Builder = AlertDialog.Builder(requireContext())
         myAlertDialog.setTitle("Select Image")
         myAlertDialog.setItems(choice, DialogInterface.OnClickListener { dialog, item ->
             when {
                 // Select "Choose from Gallery" to pick image from gallery
                 choice[item] == "Choose from Gallery" -> {
-                    val gallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+                    val gallery =
+                        Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
                     startActivityForResult(gallery, 100)
                 }
                 // Select "Take Photo" to take a photo
@@ -141,6 +151,7 @@ class ClothsFragment : Fragment() {
         })
         myAlertDialog.show()
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode === 123) {
@@ -173,11 +184,8 @@ class ClothsFragment : Fragment() {
             }
         }
     }
-    private fun openCamera() {
-        val camera_intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        startActivityForResult(camera_intent, 123)
-    }
-    fun uploadImage(fileUri: Uri,view:View) {
+
+    fun uploadImage(fileUri: Uri, view: View) {
         // on below line checking weather our file uri is null or not.
         if (fileUri != null) {
             // on below line displaying a progress dialog when uploading an image.
@@ -196,8 +204,8 @@ class ClothsFragment : Fragment() {
                 // this method is called when file is uploaded.
                 // in this case we are dismissing our progress dialog and displaying a toast message
                 progressDialog.dismiss()
-                it.metadata!!.reference!!.downloadUrl.addOnSuccessListener {uri->
-                    imageUrl=uri
+                it.metadata!!.reference!!.downloadUrl.addOnSuccessListener { uri ->
+                    imageUrl = uri
                 }
                 Toast.makeText(view.context, "Image Uploaded..", Toast.LENGTH_SHORT).show()
             }.addOnFailureListener {
@@ -210,7 +218,8 @@ class ClothsFragment : Fragment() {
             }
         }
     }
-    fun uploadImage(fileUri: Bitmap,view:View) {
+
+    fun uploadImage(fileUri: Bitmap, view: View) {
         // on below line checking weather our file uri is null or not.
         if (fileUri != null) {
             // on below line displaying a progress dialog when uploading an image.
@@ -225,14 +234,14 @@ class ClothsFragment : Fragment() {
             val ref: StorageReference = FirebaseStorage.getInstance().getReference()
                 .child(UUID.randomUUID().toString())
             // on below line adding a file to our storage.
-            val baos= ByteArrayOutputStream()
-            fileUri.compress(Bitmap.CompressFormat.JPEG,100,baos)
-            val data=baos.toByteArray()
+            val baos = ByteArrayOutputStream()
+            fileUri.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+            val data = baos.toByteArray()
             ref.putBytes(data).addOnSuccessListener {
                 // this method is called when file is uploaded.
                 // in this case we are dismissing our progress dialog and displaying a toast message
-                it.metadata!!.reference!!.downloadUrl.addOnSuccessListener {uri->
-                    imageUrl=uri
+                it.metadata!!.reference!!.downloadUrl.addOnSuccessListener { uri ->
+                    imageUrl = uri
                 }
                 progressDialog.dismiss()
                 Toast.makeText(view.context, "Image Uploaded..", Toast.LENGTH_SHORT).show()
@@ -243,9 +252,8 @@ class ClothsFragment : Fragment() {
                 Toast.makeText(view.context, "Fail to Upload Image..", Toast.LENGTH_SHORT)
                     .show()
             }.addOnCompleteListener {
-                if(it.isComplete)
-                {
-                    Toast.makeText(view.context,imageUrl.toString(),Toast.LENGTH_LONG).show()
+                if (it.isComplete) {
+                    Toast.makeText(view.context, imageUrl.toString(), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -265,7 +273,6 @@ class ClothsFragment : Fragment() {
                     for (i in 0 until height) {
                         for (i2 in 0 until width) {
                             val d = buffer.float.toDouble()
-                            Double.isNaN(d)
                             createBitmap.setPixel(i2, i, Color.argb(((1.0 - d) * 255.0).toInt(), 0, 0, 0))
                         }
                     }
@@ -273,7 +280,7 @@ class ClothsFragment : Fragment() {
                     val autoeraseimage= mergeToPinBitmap(bitmapFromContentUri, createBitmap)
                     if (autoeraseimage != null) {
                         // Now set your auto eraseimagebitmap to your imageview
-                       uploadImage(autoeraseimage,view!!)
+                        uploadImage(autoeraseimage,view!!)
                         view!!.findViewById<ImageView>(R.id.drawView).setImageBitmap(autoeraseimage)
                     } else {
                         Toast.makeText(view!!.context,resources.getString(R.string.please_try_again),Toast.LENGTH_SHORT).show()
@@ -304,4 +311,9 @@ class ClothsFragment : Fragment() {
         */return createBitmap
     }
 
+
+    private fun openCamera() {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivityForResult(cameraIntent, 123)
+    }
 }

@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.*
 import com.squareup.picasso.Picasso
@@ -29,6 +30,7 @@ class Clothing : AppCompatActivity() {
     private lateinit var databaseReference: DatabaseReference
     private lateinit var description:ArrayList<String>
     private lateinit var newList:ArrayList<String>
+    private var count:Int = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_clothing)
@@ -46,9 +48,9 @@ class Clothing : AppCompatActivity() {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (snapshot in dataSnapshot.children) {
                     val clothingItem = snapshot.getValue(ClothingItem::class.java)
-
+                    count+=1
                     clothingItem?.let { createClothingImageView(it)
-                        sendClothingDescriptionToServer(it.name)
+                        sendClothingDescriptionToServer(it.description)
 
                     }
                 }
@@ -116,9 +118,25 @@ class Clothing : AppCompatActivity() {
             newList.add(newItem)
 
             if(newList.size.toString()=="3") {
-                if (newList.contains("undescent")) {
+                if (newList.contains("indescent")) {
+                    val alertDialog= AlertDialog.Builder(this@Clothing)
+                    alertDialog.setIcon(android.R.drawable.ic_dialog_alert)
+                    alertDialog.setTitle("Message")
+                    alertDialog.setMessage("The clothes you have selected are not descent. Choose others.")
+                    alertDialog.setNegativeButton(""){dialog,_->
+                        dialog.dismiss()
+                    }
+                    alertDialog.create().show()
                     Toast.makeText(this@Clothing, "undescent", Toast.LENGTH_LONG).show()
                 } else {
+                    val alertDialog= AlertDialog.Builder(this@Clothing)
+                    alertDialog.setIcon(android.R.drawable.ic_dialog_info)
+                    alertDialog.setTitle("Message")
+                    alertDialog.setMessage("The clothes you have selected are descent")
+                    alertDialog.setNegativeButton(""){dialog,_->
+                        dialog.dismiss()
+                    }
+                    alertDialog.create().show()
                     Toast.makeText(this@Clothing, "descent", Toast.LENGTH_LONG).show()
                 }
             }
@@ -131,8 +149,8 @@ class Clothing : AppCompatActivity() {
         imageView.tag = clothingItem // Set clothingItem as tag
         Picasso.get().load(clothingItem.imageUrl).into(imageView)
         val layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+            300,
+            300
         )
         imageView.layoutParams = layoutParams
         // Set OnLongClickListener to start drag operation

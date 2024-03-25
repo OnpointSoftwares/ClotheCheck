@@ -13,12 +13,21 @@
       app:layout_constraintTop_toTopOf="parent"
     android:hint="Cloth Type"
     >
+    <!-- Spinner for Description -->
     <Spinner
-        android:id="@+id/typeEdt"
+        android:id="@+id/descriptionSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        />
+        android:layout_marginTop="16dp" />
+
+    <!-- Spinner for Name -->
+    <Spinner
+        android:id="@+id/nameSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+    />
+
   </com.google.android.material.textfield.TextInputLayout>
 <ImageView
     app:layout_constraintStart_toStartOf="parent"

@@ -38,7 +38,7 @@ class HomeFragment : Fragment() {
     private fun fetchImageUrls() {
         val auth = FirebaseAuth.getInstance().currentUser?.uid.toString()
         val databaseReference = FirebaseDatabase.getInstance().reference.child("Clothes").child(auth)
-        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+        databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val imageUrlList = mutableListOf<String>()
                 for (snapshot in dataSnapshot.children) {

@@ -1,4 +1,5 @@
 data class ClothingItem(
-    val name: String = "",
-    val imageUrl: String = ""
+    var description: String = "",
+    var imageUrl: String = "",
+    var name: String = ""
 )
