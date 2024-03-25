@@ -10,38 +10,47 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.clothchecker.R
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 
 class Clothing : AppCompatActivity() {
 
     private lateinit var shirtsContainer: LinearLayout
     private lateinit var trousersContainer: LinearLayout
     private lateinit var personImageView: ImageView
-
+    private lateinit var databaseReference: DatabaseReference
+    private lateinit var description:ArrayList<String>
+    private lateinit var newList:ArrayList<String>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_clothing)
-
+        description=ArrayList()
+        newList= ArrayList()
+        // Initialize views
         shirtsContainer = findViewById(R.id.shirtsContainer)
         trousersContainer = findViewById(R.id.trousersContainer)
         personImageView = findViewById(R.id.personImageView)
-
         // Initialize Firebase Database reference
-        val databaseReference = FirebaseDatabase.getInstance().reference
+        databaseReference = FirebaseDatabase.getInstance().reference
 
         // Retrieve data from Firebase Realtime Database
-        databaseReference.child("SelectedClothes").addValueEventListener(object :
-            ValueEventListener {
+        databaseReference.child("SelectedClothes").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (snapshot in dataSnapshot.children) {
                     val clothingItem = snapshot.getValue(ClothingItem::class.java)
-                    clothingItem?.let { createClothingImageView(it) }
+
+                    clothingItem?.let { createClothingImageView(it)
+                        sendClothingDescriptionToServer(it.name)
+
+                    }
                 }
             }
 
@@ -49,43 +58,86 @@ class Clothing : AppCompatActivity() {
                 // Handle error
             }
         })
-        personImageView.setOnDragListener { view, dragEvent ->
-            val clipData = ClipData.newPlainText("", "")
-            val dragShadow = View.DragShadowBuilder(view)
-            view.startDragAndDrop(clipData, dragShadow, view, 0)
-            true
-        }
+
         // Set OnDragListener for personImageView to handle drop event
-        // Set OnDragListener for personImageView to handle drop event
+        personImageView.visibility=View.GONE
         personImageView.setOnDragListener { v, event ->
             when (event.action) {
                 DragEvent.ACTION_DROP -> {
                     val view = event.localState as View // Retrieve the dragged view
-                    // Get the clothing item from the tag
-                    val clothingItem = view.tag as ClothingItem
+                    val clothingItem = view.tag as ClothingItem // Get the clothing item from the tag
                     // Load the clothing image to personImageView
                     Picasso.get().load(clothingItem.imageUrl).into(personImageView)
                     true
                 }
-
                 else -> false
+            }
+        }
+    }
+    private fun sendClothingDescriptionToServer(description: String){
+        GlobalScope.launch(Dispatchers.IO) {
+            val url = URL("https://eminently-rare-pegasus.ngrok-free.app/predict")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/json")
+
+            val outputStream = connection.outputStream
+            val requestBody = "{\"description\": \"$description\"}"
+            outputStream.write(requestBody.toByteArray())
+            outputStream.flush()
+
+            // Read response from the server
+            val responseCode = connection.responseCode
+            val responseMessage = if (responseCode == HttpURLConnection.HTTP_OK) {
+                // Read and handle the response
+                val reader = BufferedReader(InputStreamReader(connection.inputStream))
+                reader.readText()
+            } else {
+                // Handle error
+                "Error: ${connection.responseMessage}"
+            }
+            // Show response message in Toast
+            launch(Dispatchers.Main) {
+                val msg=responseMessage
+                saveMsg(msg)
             }
 
         }
+
     }
 
-        private fun createClothingImageView(clothingItem: ClothingItem) {
+    private fun saveMsg(msg: String) {
+        description.add(msg)
+        for(item in description.listIterator()) {
+            val jsonObject = JSONObject(item)
+            val newItem=jsonObject.getString("responses")
+
+            newList.add(newItem)
+
+            if(newList.size.toString()=="3") {
+                if (newList.contains("undescent")) {
+                    Toast.makeText(this@Clothing, "undescent", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(this@Clothing, "descent", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    // Function to create clothing item image view
+    private fun createClothingImageView(clothingItem: ClothingItem) {
         val imageView = ImageView(this)
-            imageView.background=null
         imageView.tag = clothingItem // Set clothingItem as tag
         Picasso.get().load(clothingItem.imageUrl).into(imageView)
         val layoutParams = LinearLayout.LayoutParams(
-            600,  // Width set to 300dp
-            600   // Height set to 300dp
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
         )
         imageView.layoutParams = layoutParams
         // Set OnLongClickListener to start drag operation
         imageView.setOnLongClickListener { view ->
+            sendClothingDescriptionToServer("slippers")
             val clipData = ClipData.newPlainText("", "")
             val dragShadow = View.DragShadowBuilder(view)
             view.startDragAndDrop(clipData, dragShadow, view, 0)
@@ -93,24 +145,22 @@ class Clothing : AppCompatActivity() {
         }
         imageView.setOnDragListener { v, event ->
             when (event.action) {
-                    DragEvent.ACTION_DROP -> {
-                        val view = event.localState as View // Retrieve the dragged view
-                        // Get the clothing item from the tag
-                        val clothingItem = view.tag as ClothingItem
-                        // Load the clothing image to personImageView
-                        Picasso.get().load(clothingItem.imageUrl).into(personImageView)
-                        true
-                    }
-                    else -> false
+                DragEvent.ACTION_DROP -> {
+                    val view = event.localState as View // Retrieve the dragged view
+                    val clothingItem = view.tag as ClothingItem // Get the clothing item from the tag
+                    // Load the clothing image to personImageView
+                    Picasso.get().load(clothingItem.imageUrl).into(personImageView)
+                    true
+                }
+                else -> false
             }
-            }
-        if (clothingItem.name == "shirt") {
-            shirtsContainer.addView(imageView)
-        } else if (clothingItem.name == "Trousers") {
-            trousersContainer.addView(imageView)
         }
+        // Add the image view to the appropriate container based on clothing type
+
+            shirtsContainer.addView(imageView)
     }
 
+    // Handle the result of capturing an image
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
