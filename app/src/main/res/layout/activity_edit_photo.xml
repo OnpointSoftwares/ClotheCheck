@@ -6,20 +6,47 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="5dp"
     tools:context=".editPhoto">
-<androidx.fragment.app.FragmentContainerView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/fragment_container"
-    android:layout_above="@id/bottom_nav"
-    />
+    <androidx.appcompat.widget.Toolbar
+        android:layout_width="match_parent"
+        android:id="@+id/toolbar"
+        android:layout_height="wrap_content"
+        android:background="@color/design_default_color_primary"
+        >
+        <ImageView
+            android:id="@+id/logout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_logout"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="Cloth Checker"
+            android:textColor="@color/black"
+            android:layout_marginStart="40dp"
+            />
+    </androidx.appcompat.widget.Toolbar>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_nav"
+        android:layout_below="@id/toolbar"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="5dp" />
 
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:layout_width="match_parent"
         android:id="@+id/bottom_nav"
-        android:background="#4CAF50"
+        android:background="@color/design_default_color_primary"
         android:layout_height="wrap_content"
         android:elevation="5dp"
+        android:layout_marginTop="5dp"
         android:layout_alignParentBottom="true"
         app:menu="@menu/bottomnav" />
 

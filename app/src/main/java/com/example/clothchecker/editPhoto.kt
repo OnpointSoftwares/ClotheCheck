@@ -23,16 +23,23 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
 import com.example.clothchecker.ui.main.HomeFragment
+import com.google.firebase.auth.FirebaseAuth
 import java.util.UUID
 
 class editPhoto: AppCompatActivity() {
     private lateinit var fragmentContainer: FragmentContainerView
     private lateinit var bottomNavigationView: BottomNavigationView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_photo)
         fragmentContainer = findViewById(R.id.fragment_container)
         bottomNavigationView = findViewById(R.id.bottom_nav)
+        val logout:ImageView=findViewById(R.id.logout)
+        logout.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            startActivity(Intent(this,MainActivity::class.java))
+        }
         bottomNavigationView.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.home -> {

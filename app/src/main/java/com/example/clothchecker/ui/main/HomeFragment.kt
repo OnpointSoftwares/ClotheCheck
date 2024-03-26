@@ -30,7 +30,25 @@ class HomeFragment : Fragment() {
         viewPager.adapter = imagePagerAdapter
 
         // Fetch image URLs from Firebase
-        fetchImageUrls()
+        val auth = FirebaseAuth.getInstance().currentUser?.uid.toString()
+        val databaseReference = FirebaseDatabase.getInstance().reference.child("Clothes").child(auth)
+        databaseReference.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val imageUrlList = mutableListOf<String>()
+                for (snapshot in dataSnapshot.children) {
+                    val clothingItem = snapshot.getValue(ClothingItem::class.java)
+                    clothingItem?.let {
+                        // Assuming imageUrl is the field containing the image URL in ClothingItem
+                        imageUrlList.add(it.imageUrl)
+                    }
+                }
+                imagePagerAdapter.setImageUrls(imageUrlList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle errors if needed
+            }
+        })
 
         return view
     }

@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clothchecker.R
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
@@ -46,7 +47,7 @@ class ClothesAdapter : RecyclerView.Adapter<ClothesAdapter.ViewHolder>() {
                         choice[item] == "Select Photo" -> {
                             val ref=FirebaseDatabase.getInstance().reference.child("SelectedClothes")
                             val key=ref.push().key.toString()
-                            ref.child(key).setValue(clothingItem).addOnCompleteListener {
+                            ref.child(FirebaseAuth.getInstance().currentUser!!.uid).child(key).setValue(clothingItem).addOnCompleteListener {
                                 Toast.makeText(holder.itemView.context,"Cloth selected",Toast.LENGTH_LONG).show()
                             }
                         }

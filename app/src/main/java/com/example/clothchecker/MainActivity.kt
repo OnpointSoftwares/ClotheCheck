@@ -16,9 +16,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         auth = FirebaseAuth.getInstance()
-        if(auth.currentUser!!.uid.toString()!="")
+        if(auth.uid!=null)
         {
             startActivity(Intent(this,editPhoto::class.java))
+        }
+        else{
+
         }
         val emailEditText: EditText = findViewById(R.id.emailEditText)
         val passwordEditText: EditText = findViewById(R.id.passwordEditText)

@@ -15,7 +15,7 @@ class ImagePagerAdapter : PagerAdapter() {
     private var imageUrlList: List<String> = listOf()
     private val handler: Handler = Handler(Looper.getMainLooper())
     private var runnable: Runnable? = null
-    private val delayTime: Long = 3000 // Delay time in milliseconds (3 seconds)
+    private val delayTime: Long = 5000 // Delay time in milliseconds (3 seconds)
     private var currentItem = 0
     fun setImageUrls(imageUrls: List<String>) {
         imageUrlList = imageUrls

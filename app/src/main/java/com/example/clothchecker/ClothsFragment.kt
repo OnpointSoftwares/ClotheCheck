@@ -61,6 +61,7 @@ class ClothsFragment : Fragment() {
         // Initialize ViewModel
         viewModel = ViewModelProvider(this).get(ClothsViewModel::class.java)
         fab = view.findViewById(R.id.fab)
+        imageUrl="/test".toUri()
         val descriptionSpinner = view.findViewById<Spinner>(R.id.descriptionSpinner)
         val nameSpinner = view.findViewById<Spinner>(R.id.nameSpinner)
 
@@ -83,7 +84,7 @@ class ClothsFragment : Fragment() {
         nameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         nameSpinner.adapter = nameAdapter
 
-        val upload: Button = view.findViewById(R.id.upload)
+        val upload: FloatingActionButton= view.findViewById(R.id.upload)
         upload.setOnClickListener {
             if (::imageUrl.isInitialized && descriptionSpinner.selectedItemPosition != AdapterView.INVALID_POSITION) {
                 val type = listDescriptions[descriptionSpinner.selectedItemPosition]
